@@ -1,0 +1,42 @@
+name: Deploy Lambda
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "lambda/order-processor/**"
+      - ".github/workflows/deploy-lambda.yml"
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: ap-south-1
+  LAMBDA_FUNCTION_NAME: ekslambda-dev-order-processor
+
+jobs:
+  deploy-lambda:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials using OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Package Lambda
+        run: |
+          cd lambda/order-processor
+          zip -r ../../order-processor.zip .
+
+      - name: Update Lambda code
+        run: |
+          aws lambda update-function-code \
+            --function-name "${LAMBDA_FUNCTION_NAME}" \
+            --zip-file fileb://order-processor.zip

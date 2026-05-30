@@ -1,0 +1,84 @@
+replicaCount: 2
+
+nameOverride: ""
+fullnameOverride: ""
+
+image:
+  repository: "REPLACE_WITH_ECR_REPOSITORY_URI"
+  tag: "latest"
+  pullPolicy: IfNotPresent
+
+environment: dev
+awsRegion: ap-south-1
+lambdaFunctionName: ekslambda-dev-order-processor
+
+serviceAccount:
+  create: true
+  name: ekslambda-dev-order-api-sa
+  annotations: {}
+  # Example after Terraform output:
+  # annotations:
+  #   eks.amazonaws.com/role-arn: arn:aws:iam::<account-id>:role/ekslambda-dev-order-api-lambda-invoke-role
+
+podAnnotations:
+  prometheus.io/scrape: "true"
+  prometheus.io/path: "/metrics"
+  prometheus.io/port: "8080"
+
+podLabels:
+  dynatrace.com/inject: "true"
+
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 100
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop:
+      - ALL
+
+podSecurityContext:
+  fsGroup: 100
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 8080
+
+ingress:
+  enabled: true
+  className: alb
+  host: ""
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/healthcheck-path: /healthz
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80}]'
+  path: /
+  pathType: Prefix
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 70
+
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
+
+serviceMonitor:
+  enabled: false
+  interval: 30s
+  path: /metrics
+
+networkPolicy:
+  enabled: false

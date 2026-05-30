@@ -1,0 +1,11 @@
+order-api deployed.
+
+Check resources:
+  kubectl get pods,svc,ingress -n {{ .Release.Namespace }}
+
+Port forward:
+  kubectl port-forward svc/{{ include "order-api.fullname" . }} -n {{ .Release.Namespace }} 8080:80
+
+Test:
+  curl http://localhost:8080/healthz
+  curl -Method POST http://localhost:8080/orders -Body '{"amount":250}' -ContentType 'application/json'

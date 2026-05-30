@@ -1,0 +1,14 @@
+grafana:
+  enabled: true
+  adminPassword: "change-me-after-install"
+  service:
+    type: ClusterIP
+
+prometheus:
+  prometheusSpec:
+    serviceMonitorSelectorNilUsesHelmValues: false
+    podMonitorSelectorNilUsesHelmValues: false
+    retention: 7d
+
+alertmanager:
+  enabled: true

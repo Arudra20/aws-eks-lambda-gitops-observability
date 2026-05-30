@@ -1,0 +1,28 @@
+apiVersion: dynatrace.com/v1beta6
+kind: DynaKube
+metadata:
+  name: dynakube
+  namespace: dynatrace
+spec:
+  # Replace YOUR_ENVIRONMENT_ID and region/domain from Dynatrace UI.
+  # SaaS example: https://YOUR_ENVIRONMENT_ID.live.dynatrace.com/api
+  apiUrl: https://YOUR_ENVIRONMENT_ID.live.dynatrace.com/api
+
+  # Secret name created by:
+  # kubectl -n dynatrace create secret generic dynakube --from-literal="apiToken=<TOKEN>"
+  tokens: dynakube
+
+  oneAgent:
+    cloudNativeFullStack:
+      namespaceSelector:
+        matchLabels:
+          dynatrace.com/inject: "true"
+
+  activeGate:
+    capabilities:
+      - routing
+      - kubernetes-monitoring
+      - dynatrace-api
+
+  metadataEnrichment:
+    enabled: true

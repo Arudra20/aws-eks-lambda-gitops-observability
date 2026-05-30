@@ -1,0 +1,10 @@
+project            = "ekslambda"
+environment        = "dev"
+aws_region         = "ap-south-1"
+kubernetes_version = "1.31"
+
+github_org    = "YOUR_GITHUB_ORG_OR_USERNAME"
+github_repo   = "eks-lambda-gitops-observability"
+github_branch = "main"
+
+app_namespace = "ekslambda-dev"

@@ -1,0 +1,28 @@
+replicaCount: 2
+
+image:
+  repository: "REPLACE_WITH_ECR_REPOSITORY_URI"
+  tag: "latest"
+  pullPolicy: IfNotPresent
+
+environment: dev
+awsRegion: ap-south-1
+lambdaFunctionName: ekslambda-dev-order-processor
+
+serviceAccount:
+  create: true
+  name: ekslambda-dev-order-api-sa
+  annotations:
+    eks.amazonaws.com/role-arn: "REPLACE_WITH_TERRAFORM_IRSA_ROLE_ARN"
+
+ingress:
+  enabled: true
+  className: alb
+  host: ""
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/healthcheck-path: /healthz
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80}]'
+  path: /
+  pathType: Prefix

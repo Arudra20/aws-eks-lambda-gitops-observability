@@ -1,0 +1,81 @@
+name: Build Push and Update GitOps
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "app/order-api/**"
+      - "helm/order-api/**"
+      - ".github/workflows/build-push-gitops.yml"
+
+permissions:
+  id-token: write
+  contents: write
+
+env:
+  AWS_REGION: ap-south-1
+  EKS_CLUSTER_NAME: ekslambda-dev-eks
+  HELM_VALUES_FILE: helm/order-api/values-dev.yaml
+
+jobs:
+  build-push-update-gitops:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure AWS credentials using OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Get account id
+        id: aws
+        run: |
+          echo "account_id=$(aws sts get-caller-identity --query Account --output text)" >> "$GITHUB_OUTPUT"
+
+      - name: Login to ECR
+        run: |
+          aws ecr get-login-password --region "${AWS_REGION}" | docker login --username AWS --password-stdin "${{ steps.aws.outputs.account_id }}.dkr.ecr.${AWS_REGION}.amazonaws.com"
+
+      - name: Set image variables
+        id: image
+        run: |
+          SHORT_SHA="${GITHUB_SHA::7}"
+          ECR_REPOSITORY_URI="${{ vars.ECR_REPOSITORY_URI }}"
+          echo "tag=${SHORT_SHA}" >> "$GITHUB_OUTPUT"
+          echo "repo=${ECR_REPOSITORY_URI}" >> "$GITHUB_OUTPUT"
+
+      - name: Build Docker image
+        run: |
+          docker build -t "${{ steps.image.outputs.repo }}:${{ steps.image.outputs.tag }}" app/order-api
+          docker tag "${{ steps.image.outputs.repo }}:${{ steps.image.outputs.tag }}" "${{ steps.image.outputs.repo }}:latest"
+
+      - name: Push Docker image
+        run: |
+          docker push "${{ steps.image.outputs.repo }}:${{ steps.image.outputs.tag }}"
+          docker push "${{ steps.image.outputs.repo }}:latest"
+
+      - name: Install yq
+        run: |
+          sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/download/v4.44.3/yq_linux_amd64
+          sudo chmod +x /usr/local/bin/yq
+
+      - name: Update Helm values for GitOps
+        run: |
+          yq -i '.image.repository = "${{ steps.image.outputs.repo }}"' "${HELM_VALUES_FILE}"
+          yq -i '.image.tag = "${{ steps.image.outputs.tag }}"' "${HELM_VALUES_FILE}"
+
+      - name: Commit GitOps image tag
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add "${HELM_VALUES_FILE}"
+          git commit -m "chore(gitops): deploy order-api ${{ steps.image.outputs.tag }} [skip ci]" || echo "No changes to commit"
+          git push
