@@ -1,12 +1,12 @@
-resource "aws_s3_bucket" "eks_lambda" {
+resource "aws_s3_bucket" "ekslambda" {
   bucket = var.state_bucket_name
 
   tags = merge(var.common_tags, {
     Name = var.state_bucket_name
   })
 }
-resource "aws_s3_bucket_public_access_block" "eks_lambda" {
-  bucket = aws_s3_bucket.eks_lambda.id
+resource "aws_s3_bucket_public_access_block" "ekslambda" {
+  bucket = aws_s3_bucket.ekslambda.id
 
   block_public_acls       = true
   block_public_policy     = true
@@ -14,8 +14,8 @@ resource "aws_s3_bucket_public_access_block" "eks_lambda" {
   restrict_public_buckets = true
 }
 
-resource "aws_s3_bucket_server_side_encryption_configuration" "eks_lambda" {
-  bucket = aws_s3_bucket.eks_lambda.id
+resource "aws_s3_bucket_server_side_encryption_configuration" "ekslambda" {
+  bucket = aws_s3_bucket.ekslambda.id
 
   rule {
     apply_server_side_encryption_by_default {
@@ -41,8 +41,8 @@ resource "aws_dynamodb_table" "terraform_locks" {
   })
 }
 
-resource "aws_s3_bucket_versioning" "eks_lambda" {
-  bucket = aws_s3_bucket.eks_lambda.id
+resource "aws_s3_bucket_versioning" "ekslambda" {
+  bucket = aws_s3_bucket.ekslambda.id
 
   versioning_configuration {
     status = "Enabled"
