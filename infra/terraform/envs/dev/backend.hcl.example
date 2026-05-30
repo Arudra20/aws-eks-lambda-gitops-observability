@@ -1,5 +1,0 @@
-bucket         = "REPLACE_WITH_UNIQUE_BUCKET_NAME"
-key            = "ekslambda/dev/terraform.tfstate"
-region         = "ap-south-1"
-dynamodb_table = "ekslambda-dev-tf-locks"
-encrypt        = true
