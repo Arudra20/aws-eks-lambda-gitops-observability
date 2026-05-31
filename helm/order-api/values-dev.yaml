@@ -1,20 +1,16 @@
 replicaCount: 2
-
 image:
-  repository: "REPLACE_WITH_ECR_REPOSITORY_URI"
-  tag: "latest"
+  repository: "432049653779.dkr.ecr.ap-south-1.amazonaws.com/eks_lambda-dev/order-api"
+  tag: "347ce8f"
   pullPolicy: IfNotPresent
-
 environment: dev
 awsRegion: ap-south-1
 lambdaFunctionName: ekslambda-dev-order-processor
-
 serviceAccount:
   create: true
   name: ekslambda-dev-order-api-sa
   annotations:
     eks.amazonaws.com/role-arn: "REPLACE_WITH_TERRAFORM_IRSA_ROLE_ARN"
-
 ingress:
   enabled: true
   className: alb
