@@ -24,7 +24,7 @@ permissions:
 
 env:
   AWS_REGION: ap-south-1
-  LAMBDA_FUNCTION_NAME: ekslambda-dev-order-processor
+  LAMBDA_FUNCTION_NAME: eks_lambda-dev-order-processor
 
 jobs:
   deploy-lambda:
