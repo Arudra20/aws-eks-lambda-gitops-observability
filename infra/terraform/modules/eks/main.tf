@@ -1,3 +1,20 @@
+module "ebs_csi_irsa_role" {
+  source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
+  version = "~> 5.0"
+
+  role_name             = "${var.cluster_name}-ebs-csi"
+  attach_ebs_csi_policy = true
+
+  oidc_providers = {
+    main = {
+      provider_arn               = module.eks.oidc_provider_arn
+      namespace_service_accounts = ["kube-system:ebs-csi-controller-sa"]
+    }
+  }
+
+  tags = var.tags
+}
+
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
   version = "~> 20.37"
@@ -25,48 +42,58 @@ module "eks" {
       most_recent = true
     }
     aws-ebs-csi-driver = {
-      most_recent = true
-    }
-  }
+      most_recent              = true
+      service_account_role_arn = module.ebs_csi_irsa_role.iam_role_arn
 
-  eks_managed_node_groups = {
-    general = {
-      name           = "general"
-      instance_types = ["t3.medium"]
-      capacity_type  = "ON_DEMAND"
+      resolve_conflicts_on_create = "OVERWRITE"
+      resolve_conflicts_on_update = "OVERWRITE"
 
-      iam_role_name            = "${var.cluster_name}-ng-role"
-      iam_role_use_name_prefix = false
-
-      min_size     = 2
-      max_size     = 4
-      desired_size = 2
-
-      labels = {
-        role = "general"
-      }
-
-      update_config = {
-        max_unavailable_percentage = 50
+      timeouts = {
+        create = "30m"
+        update = "30m"
+        delete = "30m"
       }
     }
-  }
 
-  access_entries = {
-    github_actions = {
-      principal_arn = var.github_actions_role_arn
-      type          = "STANDARD"
+    eks_managed_node_groups = {
+      general = {
+        name           = "general"
+        instance_types = ["t3.medium"]
+        capacity_type  = "ON_DEMAND"
 
-      policy_associations = {
-        cluster_admin = {
-          policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
-          access_scope = {
-            type = "cluster"
+        iam_role_name            = "${var.cluster_name}-ng-role"
+        iam_role_use_name_prefix = false
+
+        min_size     = 2
+        max_size     = 4
+        desired_size = 2
+
+        labels = {
+          role = "general"
+        }
+
+        update_config = {
+          max_unavailable_percentage = 50
+        }
+      }
+    }
+
+    access_entries = {
+      github_actions = {
+        principal_arn = var.github_actions_role_arn
+        type          = "STANDARD"
+
+        policy_associations = {
+          cluster_admin = {
+            policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
+            access_scope = {
+              type = "cluster"
+            }
           }
         }
       }
     }
-  }
 
-  tags = var.tags
+    tags = var.tags
+  }
 }
