@@ -30,7 +30,7 @@ module "github_oidc" {
   github_repo   = var.github_repo
   github_branch = var.github_branch
   aws_region    = var.aws_region
-  ecr_repo_arn   = module.ecr.repository_arn
+  ecr_repo_arn  = module.ecr.repository_arn
   tags          = local.common_tags
 }
 
@@ -53,12 +53,12 @@ module "lambda" {
 }
 
 module "irsa_lambda_invoke" {
-  source                = "../../modules/irsa-lambda-invoke"
-  name_prefix           = local.name_prefix
-  oidc_provider_arn     = module.eks.oidc_provider_arn
-  oidc_provider_url     = module.eks.oidc_provider_url
-  namespace             = var.app_namespace
-  service_account_name  = "${local.name_prefix}-order-api-sa"
-  lambda_function_arn   = module.lambda.lambda_function_arn
-  tags                  = local.common_tags
+  source               = "../../modules/irsa-lambda-invoke"
+  name_prefix          = local.name_prefix
+  oidc_provider_arn    = module.eks.oidc_provider_arn
+  oidc_provider_url    = module.eks.oidc_provider_url
+  namespace            = var.app_namespace
+  service_account_name = "${local.name_prefix}-order-api-sa"
+  lambda_function_arn  = module.lambda.lambda_function_arn
+  tags                 = local.common_tags
 }
