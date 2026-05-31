@@ -31,9 +31,12 @@ module "eks" {
 
   eks_managed_node_groups = {
     general = {
-      name           = "${var.cluster_name}-general-ng"
+      name           = "general"
       instance_types = ["t3.medium"]
       capacity_type  = "ON_DEMAND"
+
+      iam_role_name            = "${var.cluster_name}-ng-role"
+      iam_role_use_name_prefix = false
 
       min_size     = 2
       max_size     = 4
