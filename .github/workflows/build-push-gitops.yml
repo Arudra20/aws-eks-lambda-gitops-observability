@@ -8,6 +8,16 @@ on:
       - "app/order-api/**"
       - "helm/order-api/**"
       - ".github/workflows/build-push-gitops.yml"
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Target environment"
+        required: true
+        default: "dev"
+        type: choice
+        options:
+          - dev
+          - prod
 
 permissions:
   id-token: write
